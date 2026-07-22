@@ -106,17 +106,7 @@ data falls back to a mock fixture, clearly flagged with a "Cached data" badge in
 After adding a key to `backend/.env`, restart the backend (`npm start`) — the startup log will
 stop warning about that key, and `/api/health` will show it as `true`.
 
-## ✅ What's real vs. mocked
 
-| Feature | Real data source | Fallback |
-|---|---|---|
-| Live AQI map | WAQI station feed | `backend/src/data/mock/waqi_bengaluru.json` |
-| 72h forecast inputs | Open-Meteo wind/humidity/temp | `openmeteo_bengaluru.json` — the *forecast model itself* is a heuristic (persistence + wind/humidity adjustment), not a trained dispersion model |
-| Source attribution | Gemini reasoning over live wind + fire-hotspot signals | Rule-of-thumb mock attribution — even when live, this is LLM reasoning over indirect signals, not a validated causal model |
-| Fire hotspots | NASA FIRMS VIIRS 24h product | `firms_bengaluru.json` |
-| Chatbot | Gemini, detects and replies in the question's language | Canned mock response, prefixed `MOCK RESPONSE` |
-| Traffic density / construction permits | — | Not wired to any real feed; not currently surfaced in the UI — Phase 2 |
-| Multi-city comparison, auth | — | Out of scope for this prototype |
 
 ### Adding a new city
 
