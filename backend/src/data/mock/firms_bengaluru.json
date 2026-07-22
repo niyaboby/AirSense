@@ -1,0 +1,11 @@
+{
+  "source": "MOCK",
+  "note": "Fallback sample — replace with live NASA FIRMS response when FIRMS_MAP_KEY is set and the API is reachable.",
+  "region": "Bengaluru rural / peri-urban 100km radius",
+  "hotspots": [
+    { "lat": 12.65, "lon": 77.35, "confidence": 82, "detected_hours_ago": 4 },
+    { "lat": 13.25, "lon": 77.85, "confidence": 67, "detected_hours_ago": 9 },
+    { "lat": 12.55, "lon": 77.95, "confidence": 91, "detected_hours_ago": 2 },
+    { "lat": 13.05, "lon": 76.95, "confidence": 55, "detected_hours_ago": 14 }
+  ]
+}
