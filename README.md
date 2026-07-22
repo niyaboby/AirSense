@@ -1,126 +1,137 @@
-# AirSense
+# AirSense 🌫️
 
-AI-powered urban air quality intelligence platform for Indian cities. Fuses live AQI sensor
-data, weather forecasts, and satellite fire-hotspot data into one dashboard: a live geospatial
-AQI map, a 72-hour forecast, an AI-generated pollution source attribution, and a multilingual
-citizen health-advisory chatbot.
+**AI-powered urban air quality intelligence platform for Indian cities.**
 
-Built as a hackathon prototype — see [`architecture.md`](./architecture.md) for the data-flow
-diagram, and the **What's real vs. mocked** section below before you demo it.
+AirSense fuses live AQI sensor data, weather forecasts, and satellite fire-hotspot data into a
+single real-time dashboard, giving both citizens and city officials a clearer picture of *what*
+the air quality is, *why* it's that way, and *what to do about it*.
 
-## Quick start
 
-You need two terminals — one for the backend, one for the frontend.
 
-### 1. Backend
+
+
+## 🎥 Demo video
+
+
+https://github.com/user-attachments/assets/bf94075d-1b31-4b79-93a7-3be643253a9e
+
+
+## ✨ Features
+
+- 🗺️ **Live geospatial AQI heatmap** — color-coded stations/zones across the city, click any one
+  to drill in
+- 📈 **72-hour AQI forecast** — per-zone forecast chart adjusted using live wind/humidity trends
+- 🔍 **AI-generated pollution source attribution** — for a selected zone, an LLM reasons over
+  wind direction, time of day, season, and nearby fire-hotspot activity to estimate the likely
+  source (vehicular, construction dust, biomass burning, etc.) with a confidence score
+- 💬 **Multilingual citizen chatbot** — ask a question in English, Hindi, Kannada, or others, and
+  get a plain-language, personalized health advisory grounded in the selected zone's current AQI
+  and forecast (accounts for sensitive groups: children, elderly, respiratory conditions)
+
+## 🖥️ Tech stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | React + Vite, Tailwind CSS, Leaflet.js (map), Recharts (forecast chart) |
+| Backend | Node.js + Express |
+| LLM | **Google Gemini API** — powers the source attribution agent and the citizen chatbot |
+| Live data sources | [WAQI](https://aqicn.org/api/) (AQI readings), [Open-Meteo](https://open-meteo.com/) (weather, no key needed), [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/) (fire hotspots) |
+| Storage | None — in-memory cache for the demo session, no database, no auth |
+
+## 🚀 Getting started
+
+You'll need two terminals — one for the backend, one for the frontend.
+
+### 1. Clone and install
+
+```bash
+git clone <your-repo-url>
+cd airsense
+```
+
+### 2. Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env   # then fill in whichever keys you have — see below
+cp .env.example .env
+```
+
+Open `.env` and fill in whichever keys you have (see [Getting API keys](#-getting-api-keys) below
+— **the app runs fully on mock data with zero keys set**):
+
+```env
+WAQI_TOKEN=
+FIRMS_MAP_KEY=
+GEMINI_API_KEY=
+PORT=
+CORS_ORIGIN=
+```
+
+Start the server:
+
+```bash
 npm start
 ```
 
-Runs on `http://localhost:8787` by default. Visit `http://localhost:8787/api/health` to check
-which keys are detected.
+Runs on `http://localhost:8787`. Check `http://localhost:8787/api/health` to confirm which keys
+were detected.
 
-### 2. Frontend
+### 3. Frontend
+
+Open a second terminal:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # only needed if your backend isn't on localhost:8787
+cp .env.example .env    # only needed if backend isn't on localhost:8787
 npm run dev
 ```
 
-Runs on `http://localhost:5173` by default (Vite's dev server).
+Runs on `http://localhost:5173`. Open that URL in your browser — the dashboard should load with
+the AQI map, and clicking any station populates the forecast, source attribution, and chatbot.
 
-**The app works fully with zero API keys set** — every data source falls back to a clearly
-labeled mock/cached dataset. This means you can demo it offline or before your keys are approved.
-Look for the **Live** / **Cached data** badge next to each panel — it tells you, at a glance,
-whether that particular piece of data is real-time or a fallback.
+## 🔑 Getting API keys
 
-## API keys (all free, all optional)
+All of these are free. None are required to run the app — missing keys just mean that piece of
+data falls back to a mock fixture, clearly flagged with a "Cached data" badge in the UI.
 
-| Service | Used for | Get a key |
+| Key | Where to get it | Notes |
 |---|---|---|
-| WAQI | Live station AQI readings | https://aqicn.org/data-platform/token/ |
-| NASA FIRMS | Active fire/thermal hotspots | https://firms.modaps.eosdis.nasa.gov/api/area/ |
-| Anthropic | Source attribution + chatbot | https://console.anthropic.com/ |
-| Open-Meteo | Wind/humidity/temp forecast | No key needed |
+| `WAQI_TOKEN` | https://aqicn.org/data-platform/token/ | Enter your email, token arrives instantly, no approval wait |
+| `FIRMS_MAP_KEY` | https://firms.modaps.eosdis.nasa.gov/api/area/ | Short signup form, key emailed immediately |
+| `GEMINI_API_KEY` | https://aistudio.google.com/apikey | Sign in with a Google account, click "Create API key" — Google AI Studio gives free-tier quota, no card required to start |
+| Open-Meteo | No key needed | Used directly, no signup |
 
-Add whichever you have to `backend/.env`. Missing keys don't break anything — that data source
-just serves its mock fixture instead, with a console warning and a `live: false` flag in the API
-response.
+After adding a key to `backend/.env`, restart the backend (`npm start`) — the startup log will
+stop warning about that key, and `/api/health` will show it as `true`.
 
-## What's real vs. mocked
+## ✅ What's real vs. mocked
 
-| Feature | Real data source | Mocked / simplified |
+| Feature | Real data source | Fallback |
 |---|---|---|
-| Live AQI map | WAQI station feed (when `WAQI_TOKEN` set) | Falls back to `backend/src/data/mock/waqi_bengaluru.json` — 10 hand-placed Bengaluru stations |
-| 72h forecast | Open-Meteo wind/humidity/temp (no key needed) | The *forecast model itself* is a heuristic (persistence + wind/humidity adjustment), **not** a trained dispersion model — labeled as such in the UI tooltip and API response |
-| Source attribution | Claude reasoning over live wind + FIRMS signals (when `ANTHROPIC_API_KEY` set) | Falls back to a simple rule-of-thumb mock attribution; even when live, this is LLM reasoning over indirect signals, not a validated causal model — the UI says so explicitly |
-| Fire hotspots | NASA FIRMS VIIRS 24h product (when `FIRMS_MAP_KEY` set) | Falls back to `backend/src/data/mock/firms_bengaluru.json` — 4 sample hotspots |
-| Chatbot | Claude, detects and replies in the question's language | Falls back to a canned English mock response, clearly prefixed `MOCK RESPONSE` |
-| Traffic density / construction permits | — | **Fully mocked**, not wired to any real feed. Not currently surfaced in the UI at all — flagged here as a Phase 2 item (see below), since a real backend for it doesn't exist yet |
-| Multi-city comparison | — | **Out of scope for this prototype** — see Roadmap |
-| User accounts / auth | — | **Not implemented** — no auth needed per the brief |
+| Live AQI map | WAQI station feed | `backend/src/data/mock/waqi_bengaluru.json` |
+| 72h forecast inputs | Open-Meteo wind/humidity/temp | `openmeteo_bengaluru.json` — the *forecast model itself* is a heuristic (persistence + wind/humidity adjustment), not a trained dispersion model |
+| Source attribution | Gemini reasoning over live wind + fire-hotspot signals | Rule-of-thumb mock attribution — even when live, this is LLM reasoning over indirect signals, not a validated causal model |
+| Fire hotspots | NASA FIRMS VIIRS 24h product | `firms_bengaluru.json` |
+| Chatbot | Gemini, detects and replies in the question's language | Canned mock response, prefixed `MOCK RESPONSE` |
+| Traffic density / construction permits | — | Not wired to any real feed; not currently surfaced in the UI — Phase 2 |
+| Multi-city comparison, auth | — | Out of scope for this prototype |
 
 ### Adding a new city
 
-The mock fixtures are per-city files (`waqi_<city>.json`, `openmeteo_<city>.json`,
-`firms_<city>.json` in `backend/src/data/mock/`). To add a city:
+1. Copy `waqi_bengaluru.json` / `openmeteo_bengaluru.json` / `firms_bengaluru.json` and rename with
+   your city's slug (e.g. `waqi_kochi.json`).
+2. Edit station coordinates/AQI values to match real ward locations.
+3. Add the city's bounding box to `CITY_BBOX` in `backend/src/routes/aqi.js`.
+4. Update the `CITY` constant in `frontend/src/App.jsx`.
 
-1. Copy the Bengaluru fixture files and rename with your city's slug (e.g. `waqi_kochi.json`).
-2. Edit the station list / coordinates / AQI values to match real ward locations.
-3. Add the city's bounding box to `CITY_BBOX` in `backend/src/routes/aqi.js` so live WAQI queries
-   work too.
-4. Update `CITY` in `frontend/src/App.jsx` (currently hardcoded to `"Bengaluru"` — a city picker
-   is a natural next step, see Roadmap).
+## 🗺️ Roadmap
 
-If a city-specific mock file is missing, the backend logs a warning and falls back to the
-Bengaluru fixture rather than crashing.
-
-## Roadmap (Phase 2 — not built here)
-
-- **Trained dispersion model** to replace the heuristic 72h forecast (e.g. a WRF-Chem-based or
-  data-driven spatiotemporal model)
-- **Multi-city dashboard** with a city switcher and cross-city comparison view
-- **Real traffic + construction-permit feeds** wired into the source attribution prompt, replacing
-  the currently-absent mock values
-- **Enforcement-prioritization agent** — surfaces which zones/sources are highest-impact for
-  municipal intervention
-- **Validated causal attribution** — today's source attribution is LLM reasoning over indirect
-  signals (wind, time of day, season, fire-hotspot proximity); a production version would need
-  grounding in a validated source-apportionment model (e.g. receptor modeling / chemical mass
-  balance) before being used for policy decisions
-- User accounts, saved zones, push alerts for AQI threshold crossings
-
-## Project structure
-
-```
-airsense/
-├── architecture.md          # data-flow diagram (mermaid)
-├── README.md                 # this file
-├── backend/
-│   ├── src/
-│   │   ├── server.js          # Express entry point
-│   │   ├── routes/            # /api/aqi, /api/forecast, /api/attribution, /api/chat
-│   │   ├── services/          # waqi, open-meteo, firms, claude, forecast, cache
-│   │   └── data/mock/         # per-city fallback fixtures
-│   └── .env.example
-└── frontend/
-    ├── src/
-    │   ├── App.jsx             # dashboard layout
-    │   ├── components/         # AqiMap, ZonePanel, ForecastChart, ChatBox, LiveBadge, AqiLegend
-    │   ├── api/client.js       # backend API client
-    │   └── lib/aqi.js          # AQI bucketing shared with backend
-    └── .env.example
-```
-
-## Tech stack
-
-- Frontend: React + Vite, Tailwind CSS, Leaflet (`react-leaflet`), Recharts
-- Backend: Node.js + Express
-- LLM: Anthropic Claude API (`claude-sonnet-4-6`)
-- No database — in-memory cache for the demo session
+- Trained atmospheric dispersion model to replace the heuristic forecast
+- Multi-city dashboard with a city switcher
+- Real traffic + construction-permit feeds in the attribution prompt
+- Enforcement-prioritization agent for municipal teams
+- Validated causal source-apportionment model (receptor modeling / chemical mass balance) before
+  any use in real policy decisions
+- User accounts, saved zones, AQI threshold push alerts
